@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영양소 탐험대 - 가정 교과 연계 식생활 미로 탈출</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --panel-border: #334155;
+            --accent-green: #10b981;
+            --accent-green-hover: #059669;
+            --accent-orange: #f59e0b;
+            --accent-red: #ef4444;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-family);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+        }
+
+        /* Container */
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-title-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
+        }
+
+        .header-title-box h1 {
+            font-size: 1.25rem;
+            color: var(--accent-green);
+            font-weight: 800;
+        }
+
+        .header-title-box p {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+        }
+
+        .status-badge-container {
+            display: flex;
+            gap: 12px;
+            background-color: rgba(15, 23, 42, 0.8);
+            padding: 8px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-label {
+            font-size: 0.7rem;
+            color: var(--text-sub);
+        }
+
+        .status-value {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent-orange);
+        }
+
+        /* Main Game Box */
+        .game-card {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* 3D-styled Interactive Viewport */
+        .view-area {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background: linear-gradient(180deg, #020617 0%, #0f172a 60%, #1e293b 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 20px;
+            overflow: hidden;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        /* Canvas Floor Grid */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .doors-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            justify-content: space-around;
+            padding: 0 16px;
+        }
+
+        /* Door Cards */
+        .door-card {
+            flex: 1;
+            max-width: 180px;
+            margin: 0 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, filter 0.2s ease;
+        }
+
+        .door-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .door-card:active {
+            transform: translateY(-2px);
+        }
+
+        .door-tag {
+            background-color: var(--accent-green);
+            color: #020617;
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .door-frame {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 4px solid var(--accent-green);
+            border-top-left-radius: 100px;
+            border-top-right-radius: 100px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 12px 8px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(16, 185, 129, 0.2);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .door-card:hover .door-frame {
+            border-color: #34d399;
+            box-shadow: 0 12px 25px rgba(16, 185, 129, 0.4), inset 0 0 20px rgba(52, 211, 153, 0.4);
+        }
+
+        .door-knob {
+            position: absolute;
+            right: 14px;
+            top: 55%;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--accent-orange);
+            border: 2px solid #b45309;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .door-text-box {
+            background-color: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-main);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Overlay Effects */
+        .overlay-screen {
+            position: absolute;
+            inset: 0;
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            transition: opacity 0.3s ease;
+        }
+
+        .overlay-screen.hidden {
+            display: none;
+        }
+
+        .start-overlay {
+            background-color: rgba(15, 23, 42, 0.95);
+        }
+
+        .trap-overlay {
+            background-color: rgba(127, 29, 29, 0.9);
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .success-overlay {
+            background-color: rgba(6, 78, 59, 0.9);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-10px, 0); }
+            40% { transform: translate(10px, 0); }
+            60% { transform: translate(-8px, 0); }
+            80% { transform: translate(8px, 0); }
+        }
+
+        .overlay-icon {
+            font-size: 50px;
+            margin-bottom: 12px;
+        }
+
+        .overlay-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .overlay-desc {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+            max-width: 480px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-green), #059669);
+            color: #020617;
+            font-weight: 800;
+            font-size: 1.05rem;
+            padding: 12px 32px;
+            border-radius: 14px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.6);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Quiz Panel */
+        .quiz-panel {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .quiz-question-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            line-height: 1.5;
+        }
+
+        .quiz-options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 640px) {
+            .quiz-options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            background-color: rgba(51, 65, 85, 0.6);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            color: var(--text-main);
+            text-align: left;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .option-btn:hover {
+            background-color: var(--panel-border);
+            border-color: var(--accent-green);
+        }
+
+        .option-badge {
+            width: 24px;
+            height: 24px;
+            border-radius: 8px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--panel-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+            color: var(--accent-green);
+            flex-shrink: 0;
+        }
+
+        /* Explanation Box */
+        .explanation-card {
+            background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 14px 18px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+            display: none;
+        }
+
+        .explanation-card.visible {
+            display: block;
+        }
+
+        .explanation-title {
+            font-weight: bold;
+            color: var(--accent-orange);
+            margin-bottom: 4px;
+        }
+
+        /* Sound Control */
+        .sound-toggle-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Result Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .modal-backdrop.hidden {
+            display: none;
+        }
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 24px;
+            max-width: 440px;
+            width: 100%;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .stats-box {
+            background-color: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 16px 0 24px;
+            text-align: left;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- Top Navigation Header -->
+        <header>
+            <div class="header-title-box">
+                <div class="header-icon">🥗</div>
+                <div>
+                    <h1>영양소 탐험대</h1>
+                    <p>중1 기술·가정: 식생활과 영양 미로 탈출</p>
+                </div>
+            </div>
+            <div class="status-badge-container">
+                <div class="status-item">
+                    <div class="status-label">남은 목숨</div>
+                    <div id="lives-display" class="status-value">❤️❤️❤️</div>
+                </div>
+                <div class="status-item">
+                    <div class="status-label">진행 상황</div>
+                    <div id="stage-display" class="status-value">STAGE 1 / 5</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Interactive Game View -->
+        <div class="game-card">
+            <button class="sound-toggle-btn" id="sound-btn" title="음소거 토글">🔊</button>
+
+            <!-- 3D Room / View Area -->
+            <div class="view-area">
+                <canvas id="bg-canvas"></canvas>
+
+                <!-- Start Screen Overlay -->
+                <div id="start-overlay" class="overlay-screen start-overlay">
+                    <div class="overlay-icon">🍎</div>
+                    <h2 class="overlay-title" style="color: var(--accent-green);">식생활 & 영양 미로 탈출</h2>
+                    <p class="overlay-desc">
+                        중학교 1학년 기술·가정 교과의 <strong>6대 영양소, 식품구성자전거, 청소년기 영양과 결핍증</strong> 퀴즈를 풀어 바른 식생활 출구를 찾아 미로를 탈출하세요!
+                    </p>
+                    <button onclick="startGame()" class="btn-primary">탐험 시작하기 🚀</button>
+                </div>
+
+                <!-- Trap Overlay -->
+                <div id="trap-overlay" class="overlay-screen trap-overlay hidden">
+                    <div class="overlay-icon">🚨</div>
+                    <h2 id="trap-title" class="overlay-title" style="color: #fca5a5;">함정에 빠졌습니다!</h2>
+                    <p id="trap-desc" class="overlay-desc">잘못된 영양 지식을 선택하여 식생활 불균형 함정에 걸렸습니다.</p>
+                </div>
+
+                <!-- Stage Success Overlay -->
+                <div id="success-overlay" class="overlay-screen success-overlay hidden">
+                    <div class="overlay-icon">✨</div>
+                    <h2 class="overlay-title" style="color: #6ee7b7;">정답입니다!</h2>
+                    <p class="overlay-desc">올바른 영양소 관문을 통과했습니다. 다음 스테이지로 이동합니다.</p>
+                </div>
+
+                <!-- Interactive Doors -->
+                <div id="doors-container" class="doors-wrapper">
+                    <!-- Rendered dynamically via JavaScript -->
+                </div>
+            </div>
+
+            <!-- Quiz Interaction Control Area -->
+            <div class="quiz-panel">
+                <div id="question-text" class="quiz-question-title">
+                    문제를 로딩하는 중입니다...
+                </div>
+
+                <div id="options-container" class="quiz-options-grid">
+                    <!-- Option buttons rendered dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Educational Explanation Card -->
+        <div id="explanation-card" class="explanation-card">
+            <div class="explanation-title">💡 가정 교과 핵심 정리</div>
+            <div id="explanation-text">해설 내용이 여기에 표시됩니다.</div>
+        </div>
+
+        <footer>
+            중학교 1학년 기술·가정 - 식생활과 영양 단원 학습용 웹 애플리케이션
+        </footer>
+    </div>
+
+    <!-- Final Result Modal -->
+    <div id="result-modal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div id="modal-icon" style="font-size: 56px; margin-bottom: 12px;">🏆</div>
+            <h2 id="modal-title" style="font-size: 1.5rem; color: var(--accent-green); margin-bottom: 8px;">미로 탈출 성공!</h2>
+            <p id="modal-desc" style="font-size: 0.85rem; color: #cbd5e1; line-height: 1.5;">
+                가정 교과의 영양 지식을 완벽히 활용하여 미로를 안전하게 통과했습니다!
+            </p>
+
+            <div class="stats-box">
+                <div class="stats-row">
+                    <span style="color: var(--text-sub);">최종 결과:</span>
+                    <span id="stat-score" style="font-weight: bold; color: var(--accent-green);">5 / 5 클리어</span>
+                </div>
+                <div class="stats-row">
+                    <span style="color: var(--text-sub);">최고 기록:</span>
+                    <span id="stat-best" style="font-weight: bold; color: var(--accent-orange);">0점</span>
+                </div>
+                <div class="stats-row">
+                    <span style="color: var(--text-sub);">식생활 칭호:</span>
+                    <span id="stat-rank" style="font-weight: bold; color: #38bdf8;">S급 건강 영양 리더</span>
+                </div>
+            </div>
+
+            <button onclick="startGame()" class="btn-primary" style="width: 100%;">다시 도전하기 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        
+        // --------------------------------------------------
+        // Home Economics (가정) Curriculum Quiz Dataset
+        // --------------------------------------------------
+        const quizBank = [
+            {
+                question: "청소년기 급성장기에 뼈와 치아를 튼튼하게 형성하며, 우유, 멸치, 두부 등에 풍부한 대표적인 무기질은?",
+                options: [
+                    { label: "A번 문", text: "칼슘", isCorrect: true },
+                    { label: "B번 문", text: "철분", isCorrect: false },
+                    { label: "C번 문", text: "나트륨", isCorrect: false }
+                ],
+                explanation: "칼슘은 골격과 치아를 구성하는 핵심 무기질로, 청소년기 성장에 필수적이며 골다공증을 예방합니다.",
+                trapName: "골밀도 저하 뼈 약화 함정"
+            },
+            {
+                question: "혈액 속 헤모글로빈을 구성하여 산소를 운반하며, 부족 시 청소년기 빈혈을 유발하기 쉬운 영양소는?",
+                options: [
+                    { label: "A번 문", text: "비타민 D", isCorrect: false },
+                    { label: "B번 문", text: "철분", isCorrect: true },
+                    { label: "C번 문", text: "탄수화물", isCorrect: false }
+                ],
+                explanation: "철분은 혈액을 만드는 무기질로 달걀노른자, 시금치 등에 풍부하며 부족 시 빈혈이 생깁니다.",
+                trapName: "어지러운 빈혈 발생 함정"
+            },
+            {
+                question: "식품구성자전거의 6가지 식품군 중 신체 조직을 합성하고 근육을 형성하여 성장에 직접적인 도움을 주는 식품군은?",
+                options: [
+                    { label: "A번 문", text: "유지·당류", isCorrect: false },
+                    { label: "B번 문", text: "과일류", isCorrect: false },
+                    { label: "C번 문", text: "고기·생선·계란·콩류", isCorrect: true }
+                ],
+                explanation: "고기·생선·계란·콩류는 단백질의 주 공급원으로 몸을 구성하는 핵심 식품군입니다.",
+                trapName: "근육 손실 성장 지연 함정"
+            },
+            {
+                question: "체내 수분 균형을 조절하고 노폐물을 배출하며, 식품구성자전거의 앞바퀴에 위치하여 중요성이 강조된 것은?",
+                options: [
+                    { label: "A번 문", text: "물", isCorrect: true },
+                    { label: "B번 문", text: "지방", isCorrect: false },
+                    { label: "C번 문", text: "비타민 A", isCorrect: false }
+                ],
+                explanation: "식품구성자전거의 앞바퀴는 수분 섭취(물)와 매일 규칙적인 운동의 중요성을 상징합니다.",
+                trapName: "탈수 & 노폐물 축적 함정"
+            },
+            {
+                question: "비타민 C가 부족할 때 잇몸에서 피가 나고 상처 치유가 더뎌지는 영양 결핍증은 무엇일까요?",
+                options: [
+                    { label: "A번 문", text: "야맹증", isCorrect: false },
+                    { label: "B번 문", text: "괴혈병", isCorrect: true },
+                    { label: "C번 문", text: "각기병", isCorrect: false }
+                ],
+                explanation: "비타민 C는 신선한 채소와 과일에 풍부하며 부족 시 괴혈병이 발생합니다. (야맹증은 비타민 A 결핍)",
+                trapName: "잇몸 출혈 괴혈병 함정"
+            },
+            {
+                question: "주요 활동 에너지를 공급하는 '곡류군(밥, 빵, 국수 등)'의 대표적인 주 영양소는 무엇일까요?",
+                options: [
+                    { label: "A번 문", text: "탄수화물", isCorrect: true },
+                    { label: "B번 문", text: "무기질", isCorrect: false },
+                    { label: "C번 문", text: "비타민", isCorrect: false }
+                ],
+                explanation: "곡류는 탄수화물의 주 공급원으로 두뇌 활동과 신체 운동의 primary 에너지원입니다.",
+                trapName: "에너지 고갈 저혈당 함정"
+            },
+            {
+                question: "식품구성자전거에서 가장 작은 면적을 차지하며, 과다 섭취 시 비만을 유발하므로 적게 먹어야 하는 식품군은?",
+                options: [
+                    { label: "A번 문", text: "채소류", isCorrect: false },
+                    { label: "B번 문", text: "유지·당류", isCorrect: true },
+                    { label: "C번 문", text: "우유·유제품류", isCorrect: false }
+                ],
+                explanation: "유지·당류(버터, 식용유, 설탕 등)는 열량이 높아 과다 섭취를 조절해야 합니다.",
+                trapName: "영양 불균형 고열량 함정"
+            }
+        ];
+
+        // --------------------------------------------------
+        // Audio Synthesizer (Web Audio API)
+        // --------------------------------------------------
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            }
+
+            playCorrect() {
+                if (this.muted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.2); // G5
+
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+
+            playTrap() {
+                if (this.muted || !this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(80, now + 0.3);
+
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            }
+        }
+
+        const audio = new SoundFX();
+
+        document.getElementById('sound-btn').addEventListener('click', () => {
+            audio.muted = !audio.muted;
+            document.getElementById('sound-btn').innerText = audio.muted ? '🔇' : '🔊';
+        });
+
+
+        // --------------------------------------------------
+        // Canvas Background Grid Renderer
+        // --------------------------------------------------
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            drawFloorGrid();
+        }
+
+        function drawFloorGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+            ctx.lineWidth = 1;
+
+            const horizon = canvas.height * 0.4;
+            const centerX = canvas.width / 2;
+
+            // Perspective Grid Lines
+            for (let x = -canvas.width; x <= canvas.width * 2; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(centerX + (x - centerX) * 0.1, horizon);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            // Horizontal grid lines
+            for (let y = horizon; y <= canvas.height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --------------------------------------------------
+        // Core Game Engine & State Management
+        // --------------------------------------------------
+        let currentStage = 0;
+        const totalStages = 5;
+        let lives = 3;
+        let activeQuestions = [];
+        let isProcessing = false;
+
+        function loadBestScore() {
+            try {
+                return localStorage.getItem('nutrient_maze_best') || 0;
+            } catch (e) {
+                return 0; // LocalStorage fallback
+            }
+        }
+
+        function saveBestScore(score) {
+            try {
+                const currentBest = loadBestScore();
+                if (score > currentBest) {
+                    localStorage.setItem('nutrient_maze_best', score);
+                }
+            } catch (e) {
+                // Silently handle security restrictions in embedded frames
+            }
+        }
+
+        function startGame() {
+            audio.init();
+            lives = 3;
+            currentStage = 0;
+            isProcessing = false;
+
+            // Shuffle and pick 5 questions
+            activeQuestions = [...quizBank].sort(() => Math.random() - 0.5).slice(0, totalStages);
+
+            document.getElementById('start-overlay').classList.add('hidden');
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('explanation-card').classList.remove('visible');
+
+            resizeCanvas();
+            updateHeaderUI();
+            loadStage();
+        }
+
+        function loadStage() {
+            isProcessing = false;
+            document.getElementById('trap-overlay').classList.add('hidden');
+            document.getElementById('success-overlay').classList.add('hidden');
+            document.getElementById('explanation-card').classList.remove('visible');
+
+            const currentQ = activeQuestions[currentStage];
+            document.getElementById('question-text').innerText = `Q${currentStage + 1}. ${currentQ.question}`;
+
+            renderDoors(currentQ.options);
+            renderOptionButtons(currentQ.options);
+        }
+
+
+        function renderDoors(options) {
+            const container = document.getElementById('doors-container');
+            container.innerHTML = '';
+
+            options.forEach((opt, idx) => {
+                const doorHTML = `
+                    <div class="door-card" onclick="handleChoice(${idx})">
+                        <div class="door-tag">${opt.label}</div>
+                        <div class="door-frame">
+                            <div class="door-knob"></div>
+                            <div class="door-text-box">${opt.text}</div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += doorHTML;
+            });
+        }
+
+        function renderOptionButtons(options) {
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            options.forEach((opt, idx) => {
+                const btnHTML = `
+                    <button class="option-btn" onclick="handleChoice(${idx})">
+                        <div class="option-badge">${String.fromCharCode(65 + idx)}</div>
+                        <span>${opt.text}</span>
+                    </button>
+                `;
+                container.innerHTML += btnHTML;
+            });
+        }
+
+        function handleChoice(index) {
+            if (isProcessing) return;
+            isProcessing = true;
+
+            const currentQ = activeQuestions[currentStage];
+            const chosen = currentQ.options[index];
+
+            // Show explanation
+            document.getElementById('explanation-text').innerText = currentQ.explanation;
+            document.getElementById('explanation-card').classList.add('visible');
+
+            if (chosen.isCorrect) {
+                audio.playCorrect();
+                document.getElementById('success-overlay').classList.remove('hidden');
+
+                setTimeout(() => {
+                    currentStage++;
+                    if (currentStage >= totalStages) {
+                        finishGame(true);
+                    } else {
+                        updateHeaderUI();
+                        loadStage();
+                    }
+                }, 1500);
+
+            } else {
+                lives--;
+                audio.playTrap();
+                updateHeaderUI();
+
+                document.getElementById('trap-title').innerText = `🚨 함정: ${currentQ.trapName}`;
+                document.getElementById('trap-desc').innerText = `올바르지 않은 식습관 선택으로 함정에 걸렸습니다! (남은 목숨: ${lives})`;
+                document.getElementById('trap-overlay').classList.remove('hidden');
+
+                setTimeout(() => {
+                    if (lives <= 0) {
+                        finishGame(false);
+                    } else {
+                        isProcessing = false;
+                        document.getElementById('trap-overlay').classList.add('hidden');
+                    }
+                }, 1800);
+            }
+        }
+
+        function updateHeaderUI() {
+            let hearts = '';
+            for (let i = 0; i < 3; i++) {
+                hearts += (i < lives) ? '❤️' : '🖤';
+            }
+            document.getElementById('lives-display').innerText = hearts;
+            document.getElementById('stage-display').innerText = `STAGE ${currentStage + 1} / ${totalStages}`;
+        }
+
+        function finishGame(isSuccess) {
+            const finalScore = isSuccess ? totalStages : currentStage;
+            saveBestScore(finalScore);
+
+            const modal = document.getElementById('result-modal');
+            const icon = document.getElementById('modal-icon');
+            const title = document.getElementById('modal-title');
+            const desc = document.getElementById('modal-desc');
+            const scoreLabel = document.getElementById('stat-score');
+            const bestLabel = document.getElementById('stat-best');
+            const rankLabel = document.getElementById('stat-rank');
+
+            modal.classList.remove('hidden');
+
+            scoreLabel.innerText = `${finalScore} / ${totalStages} 관문 통과`;
+            bestLabel.innerText = `${loadBestScore()} 점`;
+
+            if (isSuccess) {
+                icon.innerText = '🥗';
+                title.innerText = '미로 탈출 성공!';
+                title.style.color = 'var(--accent-green)';
+                desc.innerText = '축하합니다! 가정 교과서의 바른 식생활 지식을 잘 활용하여 건강하게 탈출하셨습니다!';
+                rankLabel.innerText = lives === 3 ? 'S급 건강 영양 리더' : 'A급 식생활 탐험가';
+            } else {
+                icon.innerText = '🍔';
+                title.innerText = '식생활 함정으로 탈출 실패!';
+                title.style.color = 'var(--accent-red)';
+                desc.innerText = '영양 불균형 함정에 너무 많이 걸렸습니다. 교과서를 복습하고 다시 도전하세요!';
+                rankLabel.innerText = '초보 식습관 인턴';
+            }
+        }
+
+        // Initialize canvas sizing on load
+        window.onload = () => {
+            resizeCanvas();
+        };
+    </script>
+</body>
+</html>
